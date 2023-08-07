@@ -1,0 +1,304 @@
+<meta charset="utf-8" lang="en">  <!-- this line allows UTF-8 characters in the .html file -->
+
+                    **P04_PathFinding**
+
+
+<!--
+
+General
+========
+
+For each of your team's implementations, explain the following (where appropriate and applicable):
+
+- details on calling conventions, input and output data formats, limitations, bugs, and special features.
+- negative aspects of your program (limitations, known bugs)
+- positive aspects (extensions, special features)
+- describe your choice of modularization (abstractions), data structures, and algorithms
+- explain anything you did that is likely to be different from what other students may have done
+- justify any design decisions for which the rationale isn't immediately clear
+
+Feel free to modify the structure of this `readme.html` file to fit the current assignment and to fit how you wish to present your findings.
+
+
+!!! note: Math Typesetting
+    Surround your math with double dollar signs to have [MathJax](https://www.mathjax.org/) typeset it beautifully.
+    To add a tilde in math mode (using dollar signs), use the `\sim` command.
+    If an exponent has more than one character, you must surround it with curly braces.
+    In the example below, the exponent for $T$ must use curly braces, but they aren't required for $N$.
+
+    $$ \sim T^{1.2} N^2 $$
+
+    Note: Typesetting like this is optional; feel free to use plain text if you'd like.
+
+
+Submission
+-----------
+
+Use the CSE LogHistory Plug-in to create a zip file containing all your code, this `readme.html` document, and any additional files of evidence (ex: screenshots).
+If you create a zip by other means, it will include all the files under `tests` and might miss some important files (ex: `.log/history.log`).
+The former will make for a very large zip file; the latter will cause you to lose points.
+
+
+-->
+
+
+
+Author
+=============
+
+
+<!-- fill out the following table with your information -->
+<!-- Note: wrapping table in div.noheader will hide the table's header -->
+<!-- Note: wrapping table in div.firstcol will style the first column different from other columns -->
+<div class="noheader firstcol">
+                  |             
+------------------|-------------
+name              | Bryce Nesius
+computer + OS     | macOS Monterey
+time to complete  | 18 hrs
+partner           | Isaac Wickham
+additional help   | Dr. Denning
+</div>
+
+
+
+Assignment Details
+===================
+
+
+`Pathfinding` Implementation
+---------------------------
+
+<!--
+Explain briefly how you implemented the Pathfinding data type.
+What did you work on first?
+What did you work on next?
+-->
+In order to implement this data structure, I utilized a minimum priority queue to keep track of Nodes added and always
+return the Node with the lowest key. This implemented Dikstra's Algorithm with a little extra taking into consideration
+a heuristic value that allowed the search algorithm to choose options that are in the direction of the end Node.
+The actual logic of this was not particularly difficult, there is a main function where the bulk of the computation takes
+place named computePath(). This is a basic while loop that loops until a path is found from "start" to "end". It contains
+4 main if statements that check the neighboring tiles on a 2x2 integer array. If a neighbor has not been checked, a new
+Node is created and on a secondary data structure which is a 2D boolean array will set the value of a checked tile to 'true'.
+In order to calculate when to create a new PFNode on any given neighboring tile, the 4 main if statements check if the
+anticipated new PFNode's coordinates are on the board or in bounds, and then also checks the secondary boolean 2D array
+for if a PFNode has already been created for a particular tile. Then using a stack after finding the shortest path to the
+'end', I push on all the coordinates for each node tracing the 'end' node all the way back to the 'start' node using an
+iterator and adding all the coordinates along the path tracing the previous PFNodes and adding their coordinates to the
+stack. This is then passed to the walker class in order to determine the solution path the Walker visualizer will use to
+'walk' along the shortest path.
+
+
+`PFNode` Implementation
+------------------------
+
+<!--
+Briefly explain how you represented the search node PFNode.
+-->
+My PFNode implementation includes a few constructor variables to be stored in each Node, including, what PFNode the current
+one came from and the Coordinates for a particular PFNode. This allows me to keep track of the shortest path via tracing
+the current PFNode back to the 'start' PFNode. Each PFNode also stores the cost value it took in order to reach that
+particular Node, which is calculated in a PFNode method called getCost(). This method utilized Dikstra's Algorithm and
+a heuristic value to calculate the cost to reach any given PFNode along the shortest path to reach the end. The heuristic
+value adds weight to the algorithm to choose a PFNode that is moving in the direction of the 'end' Node. The higher the
+heuristic value the more directly the algorithm will try to reach the 'end'.
+
+
+`Walker` Implementation
+------------------------
+
+<!--
+Explain briefly how you implemented the Walker data type.
+-->
+The Walker implementation is quite simple, it takes in values determined in the Pathfinder class and uses the stack of
+coordinates passed in to know which locations the walker should 'walk' along to reach the 'end' in the shortest path. The
+speed of the walker is determined by whether or not there is a change in elevation or cost to travel from one PFNode to
+another. It checks if there is a next() coordinate in the stack and then uses each to find where to move to next.
+
+
+Analysis
+===========
+
+
+Correctness
+------------
+
+<!--
+How did you test the correctness of your algorithm?
+-->
+Testing the correctness of this algorithm was pretty difficult as in order to debug, most of the code had to run without
+errors, which was not the case. So in order to test the correctness, my partner and I drew out the smallest test board which
+was 32x32 or 1024 tiles. Including print statements for coordinates and also printing which tiles new PFNodes were being
+created on, we drew out the logic our program was taking before breaking. We manually drew out almost half of the board
+searched before concluding it was following the correct logic, examining each possible path and only returning the shortest
+path. In order to test the path cost and area of the board searched, we were able to eyeball the percent searched and tell
+pretty easily that it was not returning the correct value, as 2% of the board is pretty obviously not when almost the whole
+board is colored in as 'searched'. To calculate the correct path cost, I traced and printed the costs of all previous PFNodes
+to confirm they had values and then finally found a bug where each cost was not being added, but overwritten by the stack created
+in computePath(). This was an easy fix, I just had to move the logic of the stack until after I was done with the last
+PFNode so that it was not overwritten.
+
+
+
+Runtime Analysis
+-----------------
+
+<!--
+For each of the following maps and given the default starting and ending locations, give the estimated travel cost ($\text{cost}_0(E)$) and search size for different heuristic values ($h$).
+-->
+
+map      | h      | cost      | search
+---------|--------|-----------|--------
+maze32_0 |   0    |   251.0   | 940 (91%)
+maze32_0 |   1    |  5380.07  | 833 (81%)
+maze32_0 |   2    | 10,509.14 | 827 (80%)
+maze32_0 |  128   | 656,771.6 | 824 (80%)
+maze32_1 |   0    |   55.0    | 915 (89%)
+maze32_1 |   16   | 17,806.4  | 779 (76%)
+usa128   |   0    |  1.747E7  | 10036 (61%)
+usa128   | 0.0039 |  1.747E7  | 10036 (61%)
+usa128   |   2    |  1.752E7  | 9357 (57%)
+usa128   |   16   |  1.788E7  | 9420 (57%)
+usa256   |   0    |  1.998E7  | 41,977 (64%)
+usa1024  |   0    |  1.551E7  | 536,893 (51%)
+usa1024  |  0.25  |  1.535E7  | 519,166 (49%)
+
+<!--
+Given the information above, do you notice any patterns?
+Is there a value of $h$ that seems to work best?
+-->
+The pattern I notice when playing with the values is that the lower percent-area searched normally means a higher cost,
+and the heuristic that seemed to give the best results was a very low heuristic value close to zero. Once the heuristic
+grows too large, the results grow worse or the same as when it is 0.
+
+
+Known bugs / limitations
+-------------------------
+
+<!--
+What bugs or limitations were troublesome?
+What bugs or limitations still remain?
+Are these bugs or limitations a problem in your implementation, algorithm, or something else?
+How do you know that you did not miss a bug?
+What additional tests did you run to ensure that your implementations are correct?
+-->
+
+<!-- ... -->
+After many hours of debugging, almost every single bug encountered in this project were the silly typo or incorrect operator
+kind of bugs. After far too long debugging and walking through the code and problem manually and not getting the expected
+results or values, it was almost always a silly syntax error or lack of understanding how an object is compared versus the
+things within it. In terms of limitations, I believe this implementation could be much more efficient. As it stands I improved
+the runtime dramatically by changing the logic of my getCost() function from a recursive call to just accessing the value of
+the previous PFNode. This changed the resulting runtime, even on the Terrains where the size is very large to be almost
+instant versus having to wait for a bit for the program to finish running. So far that was the biggest factor to improving
+the runtime in this project, but I am sure there are several more improvements to be made in order to fully implement an
+extremely efficient project.
+
+
+
+Reflection
+===========
+
+
+<!--
+Did you use any of the CT Skills?
+If so, which ones did you use, and how did you use them?
+If not, explain what you did when you needed help.
+Or, did you not need help?
+
+- consulting an expert
+- asking good questions
+- edge cases
+- similar problems / fewer variables
+- developing subgoals
+-->
+I used a plethora of critical thinking skills to complete this assignment and move past bugs. Often times many of the questions
+asked were "why is it doing this, when it should be doing this?" This led to plenty of manually debugging by hand and with the debugger in InteliJ.
+One of the most useful resources was my partner, as we were able to bounce any and all questions we had on bugs off one another
+and really dig deeper into some of the questions we had as to why some part of the code was behaving like it was. For example,
+calculating the neighbors in computePath() was giving us many problems and after drawing it out together and monitoring the
+behaviour of the program we were able to figure out that what we assumed where 'left, right, above, and below' tiles were
+actually mislabelled, so we were treating them as if they were properly labelled, which led to many bugs and errors during compiling, such
+as throwing IndexOutOfBoundsExceptions.
+
+<!--
+What did you do to monitor your progress and make sure you did not spend more time than necessary on this assignment?
+-->
+
+
+<!--
+Describe whatever help (if any) that you received.
+Don't include readings, lectures, but do include any help from people (including course staff, lab TAs, classmates, and friends)  and attribute them by name.
+-->
+The bulk of the help recieved on this project was by the TA's understanding the problem and setup of the starting API,
+and mostly from Dr. Denning assisting me in asking the right questions in order to determine the root cause of many bugs and errors.
+
+<!--
+Describe any serious problems you encountered.
+-->
+Like I stated above, most of the bugs and errors for this project were silly typos or misunderstanding of what was being stored
+in variables. The logic was rather simple and overall the project only looks extremely complex because of all the helper methods
+and Class functions included.
+
+
+<!--
+List any other comments here.
+Feel free to provide any feedback on how much you learned from doing the assignment, and whether you enjoyed doing it.
+-->
+
+
+
+
+
+
+
+
+
+<!--   Feel free to modify the following to fit a theme of your choosing   -->
+<link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet"> <!-- a sans-serif font -->
+<style>  /* A TAYLOR-INSPIRED THEME */
+    body {font-family:'Open Sans',sans-serif;}
+    .md a:link, .md a:visited {color:hsl(252,23.0%,44.3%); font-family:'Open Sans',sans-serif;}
+    .md table.table th {background-color:hsl(252,23.0%,44.3%);}
+    .md .noheader th {display:none;}
+    .md .firstcol td:first-child {white-space:pre;color:white;vertical-align:top;font-weight:bold;border-color:black;background:hsl(252,23.0%,54.3%);}
+    .md .firstcol tr:nth-child(even) td:first-child {background:hsl(252,23.0%,44.3%);}
+    .md div.tilde { margin: 5px 0 20px; }
+</style>
+
+
+<!-- ****************************** -->
+<!--    Leave the content below     -->
+<!-- ****************************** -->
+
+<!-- The script and style below are added for clarity and to workaround a bug -->
+<script>
+    // this is a hack to workaround a bug in Markdeep+Mathjax, where
+    // `&#36;`` is automatically converted to `\(`` and `\)`` too soon.
+    // the following code will replace the innerHTML of all elements
+    // with class "dollar" with a dollar sign.
+    setTimeout(function() {
+        var dollars = document.getElementsByClassName('dollar');
+        for(var i = 0; i < dollars.length; i++) {
+            dollars[i].innerHTML = '&#' + '36;'; // split to prevent conversion to $
+        }
+    }, 1000);
+</script>
+<style>
+    /* adding some styling to <code> tags (but not <pre><code> coding blocks!) */
+    :not(pre) > code {
+        background-color: rgba(0,0,0,0.05);
+        outline: 1px solid rgba(0,0,0,0.15);
+        margin-left: 0.25em;
+        margin-right: 0.25em;
+    }
+    /* fixes table of contents of medium-length document from looking weird if admonitions are behind */
+    .md div.mediumTOC { background: white; }
+    .md div.admonition { position: initial !important; }
+</style>
+
+<!--   Leave the following Markdeep formatting code, as this will format your text above to look nice in a wed browser   -->
+<style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style>
+<script src="https://casual-effects.com/markdeep/latest/markdeep.min.js"></script>
+<script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible");</script>
